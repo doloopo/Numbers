@@ -14,39 +14,20 @@ namespace _BigInteger
         // Does List<T> cause performance loss? 
         public bool isNegative { get; set; }
 
-        // public int rawDataCount { get { return rawData.Length; } }
+        // public int rawDataCount { get { return rawData.Count; } }
         // Type uint used for easy debugging. 
-        // public List<uint> rawData = new List<uint>();
-        public uint[] rawData = {}; 
-        // protected List<uint> zeroData = new List<uint> { 0 };
-        protected uint[] zeroData = {0}; 
-
-        public static void RemoveAt(ref uint[] data, int index) 
-        {
-            uint[] tdata = new uint[data.Length - 1]; 
-            for (int i = 0; i < data.Length - 1; i++) {
-                tdata[i] = i >= index ? data[i+1] : data[i]; 
-            }
-            data = tdata; 
-        }
-
-        public static void Add(ref uint[] data, uint value) 
-        {
-            uint[] tdata = new uint[data.Length + 1]; 
-            for (int i = 0; i < data.Length; i++) tdata[i] = data[i]; 
-            tdata[tdata.Length - 1] = value;
-            data = tdata;  
-        }
+        public List<uint> rawData = new List<uint>();
+        protected List<uint> zeroData = new List<uint> { 0 };
 
         // clearEmpty() is used to clear empty int listitems,
         // from the last (also the 最高位) to the first listitem.
         protected void clearEmpty()
         {
-            if (rawData.Length > 1)
+            if (rawData.Count > 1)
             {
-                for (int i = rawData.Length - 1; i >= 0; i--)
+                for (int i = rawData.Count - 1; i >= 0; i--)
                 {
-                    if (rawData[i] == 0) MyBigInteger.RemoveAt(ref rawData, i);
+                    if (rawData[i] == 0) rawData.RemoveAt(i);
                     else return;
                 }
             }
@@ -84,26 +65,26 @@ namespace _BigInteger
         public MyBigInteger(int length, uint fill)
         {
             isNegative = false;
-            for (int i = 0; i < length; i++) Add(ref rawData, fill);
+            for (int i = 0; i < length; i++) rawData.Add(fill);
         }
         public MyBigInteger(int length, MyBigInteger fill)
         {
-            if (length < fill.rawData.Length)
+            if (length < fill.rawData.Count)
                 throw new OverflowException("Fill is longer than specified length. ");
             isNegative = fill.isNegative;
             rawData = fill.rawData;
 
-            while (this.rawData.Length < length)
+            while (this.rawData.Count < length)
             {
-                MyBigInteger.Add(ref this.rawData, 0);
+                this.rawData.Add(0);
             }
         }
         public MyBigInteger(long value)
         {
             isNegative = (value < 0);
             value = Math.Abs(value);
-            MyBigInteger.Add(ref rawData, (uint)(value % 0x100000000));
-            Add(ref rawData, (uint)(value >> 32));
+            rawData.Add((uint)(value % 0x100000000));
+            rawData.Add((uint)(value >> 32));
             clearEmpty();
         }
         // Only accept numbers like "123456789", "-123456789". 
@@ -125,11 +106,11 @@ namespace _BigInteger
                 case StringType.Hex:
                     for (int i = 0; i < value.Length / 8; i++)
                     {
-                        Add(ref rawData, Convert.ToUInt32(
+                        rawData.Add(Convert.ToUInt32(
                             value.Substring(value.Length - 8, 8), 16));
                         value = value.Substring(0, value.Length - 8);
                     }
-                    if (value != "") Add(ref rawData, Convert.ToUInt32(value, 16));
+                    if (value != "") rawData.Add(Convert.ToUInt32(value, 16));
                     break;
             }
         }
@@ -150,14 +131,14 @@ namespace _BigInteger
         {
             // Initialise
             MyBigInteger res;
-            if (a.rawData.Length >= b.rawData.Length) res = new MyBigInteger(a.rawData.Length + 1, 0);
-            else res = new MyBigInteger(b.rawData.Length + 1, 0);
+            if (a.rawData.Count >= b.rawData.Count) res = new MyBigInteger(a.rawData.Count + 1, 0);
+            else res = new MyBigInteger(b.rawData.Count + 1, 0);
             res.isNegative = false;
 
-            MyBigInteger ta = new MyBigInteger(res.rawData.Length, a),
-            tb = new MyBigInteger(res.rawData.Length, b);
+            MyBigInteger ta = new MyBigInteger(res.rawData.Count, a),
+            tb = new MyBigInteger(res.rawData.Count, b);
 
-            for (int i = 0; i < res.rawData.Length; i++)
+            for (int i = 0; i < res.rawData.Count; i++)
             {
                 bool carry = false;
                 // Current = res + a + b
@@ -175,11 +156,11 @@ namespace _BigInteger
         {
             if (great < less) throw new InvalidDataException("The great is less than the less. ");
             MyBigInteger res = new MyBigInteger(great);
-            MyBigInteger tless = new MyBigInteger(res.rawData.Length, less);
+            MyBigInteger tless = new MyBigInteger(res.rawData.Count, less);
             res.isNegative = false;
 
             uint carry = 0;
-            for (int i = 0; i < res.rawData.Length; i++)
+            for (int i = 0; i < res.rawData.Count; i++)
             {
                 // Enough for minus
                 if (res.rawData[i] >= tless.rawData[i] + carry)
@@ -202,15 +183,15 @@ namespace _BigInteger
         {
             if (a.isNegative != b.isNegative) return !a.isNegative;
 
-            if (a.rawData.Length != b.rawData.Length)
+            if (a.rawData.Count != b.rawData.Count)
                 // a.c > b.c    a.neg    result
                 // true         true     false
                 // true         false    true
                 // false        true     true
                 // false        false    false
-                return (a.rawData.Length > b.rawData.Length) ^ a.isNegative;
+                return (a.rawData.Count > b.rawData.Count) ^ a.isNegative;
 
-            for (int i = a.rawData.Length - 1; i >= 0; i--)
+            for (int i = a.rawData.Count - 1; i >= 0; i--)
             {
                 if (a.rawData[i] > b.rawData[i]) return true ^ a.isNegative;
                 if (a.rawData[i] < b.rawData[i]) return false ^ a.isNegative;
@@ -221,10 +202,10 @@ namespace _BigInteger
         {
             if (a.isNegative != b.isNegative) return a.isNegative;
 
-            if (a.rawData.Length != b.rawData.Length)
-                return (a.rawData.Length < b.rawData.Length) ^ a.isNegative;
+            if (a.rawData.Count != b.rawData.Count)
+                return (a.rawData.Count < b.rawData.Count) ^ a.isNegative;
 
-            for (int i = a.rawData.Length - 1; i >= 0; i--)
+            for (int i = a.rawData.Count - 1; i >= 0; i--)
             {
                 if (a.rawData[i] > b.rawData[i]) return false ^ a.isNegative;
                 if (a.rawData[i] < b.rawData[i]) return true ^ a.isNegative;
@@ -281,8 +262,8 @@ namespace _BigInteger
         public static bool operator ==(MyBigInteger a, MyBigInteger b)
         {
             if (a.isNegative == b.isNegative)
-                if (a.rawData.Length == b.rawData.Length)
-                    for (int i = 0; i < a.rawData.Length; i++)
+                if (a.rawData.Count == b.rawData.Count)
+                    for (int i = 0; i < a.rawData.Count; i++)
                         if (a.rawData[i] == b.rawData[i]) return true;
             return false;
         }
@@ -303,7 +284,7 @@ namespace _BigInteger
         // Types
         public static explicit operator long(MyBigInteger value)
         {
-            int c = value.rawData.Length;
+            int c = value.rawData.Count;
             if (c > 2)
             {
                 throw new OverflowException("Type 'long' cannot contain the value. ");
@@ -329,9 +310,9 @@ namespace _BigInteger
         public string ToHexString()
         {
             string res = "";
-            for (int i = 0; i < rawData.Length; i++)
+            for (int i = 0; i < rawData.Count; i++)
             {
-                if (i != rawData.Length - 1) res = rawData[i].ToString("x8") + res;
+                if (i != rawData.Count - 1) res = rawData[i].ToString("x8") + res;
                 else res = rawData[i].ToString("x") + res;
             }
             if (isNegative) res = "-" + res;
