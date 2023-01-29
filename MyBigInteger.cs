@@ -325,7 +325,6 @@ namespace _BigInteger
         {
             return new MyBigInteger(value);
         }
-        // The negative value isn't presented regularly. 
         public string ToHexString()
         {
             string res = "";
@@ -334,6 +333,7 @@ namespace _BigInteger
                 if (i != rawData.Length - 1) res = rawData[i].ToString("x8") + res;
                 else res = rawData[i].ToString("x") + res;
             }
+            // An ugly selection
             if (isNegative) res = "-" + res;
             return res;
         }
